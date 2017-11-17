@@ -7,7 +7,7 @@ import time
 import json
 import os
 import re
-
+import multiprocessing
 class MzSpider():
     def __init__(self):
         self.headers={
@@ -54,6 +54,8 @@ class MzSpider():
             print('>>>%s下第%d张图片保存完毕' % (title, index))
 
     def start(self):
+        pool=multiprocessing.Pool(multiprocessing.cpu_count())
+
         base_html=self.get_html(self.baseUrl)
         max_page=self.get_max_pages(base_html)
         for i in range(1,max_page+1):
@@ -76,7 +78,10 @@ class MzSpider():
                     img_data = self.get_html(links)
                     img_path = img_data('.main-image a img').attr('src')
                     # print(href)
-                    self.save_img(href,img_path,title,j)
+                    pool.apply_async(self.save_img,(href,img_path,title,j))
+                    # self.save_img(href,img_path,title,j)
+        pool.close()
+        pool.join()
         print('全部图片下载完毕')
 
 if __name__ == '__main__':
